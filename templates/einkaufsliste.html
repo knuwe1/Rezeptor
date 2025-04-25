@@ -1,0 +1,69 @@
+{# templates/einkaufsliste.html #}
+{% extends 'layout.html' %}
+
+{% block title %}Einkaufsliste{% endblock %}
+
+{% block content %}
+    {# NEU: Zeige an, für wie viele Portionen die Liste ist #}
+    {% if desired_portions %}
+    <h1>Einkaufsliste <span class="badge bg-secondary">für {{ desired_portions }} Portionen</span></h1>
+    {% else %}
+    <h1>Einkaufsliste</h1>
+    {% endif %}
+
+
+    {% if shopping_list is not none and shopping_list %}
+        {# Nachricht für Skalierungswarnungen wird über Flash angezeigt #}
+
+        <ul class="list-group mt-3">
+            {# Sortiere die Zutaten nach Namen #}
+            {% for zutat_name, einheiten_mengen in shopping_list.items()|sort %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                         <div class="fw-bold">{{ zutat_name }}</div>
+                         {# Sortiere die Einheiten/Mengen für jede Zutat #}
+                         {% for einheit, menge in einheiten_mengen.items()|sort %}
+                            <span class="unit-amount d-block ms-3">
+                                {% if menge or not einheit %}
+                                    {# Formatierte Menge: Runde Floats, zeige Ints ohne .0 #}
+                                    {% if menge is number and menge > 0 %}
+                                        {% if menge % 1 == 0 %}
+                                            {{ menge|int }} {# Ganze Zahl #}
+                                        {% else %}
+                                            {{ "%.1f"|format(menge) }} {# Runde auf 1 Nachkommastelle #}
+                                        {% endif %}
+                                    {% elif menge is number and menge == 0 and einheit %} {# Menge wurde 0, aber Einheit existiert #}
+                                         - {# Zeige nichts oder Strich #}
+                                    {% elif menge is string %}
+                                        {{ menge }} {# Z.B. für Anmerkungen #}
+                                    {% endif %}
+
+                                    {# Zeige Einheit nur an, wenn sie nicht leer ist #}
+                                    {% if einheit %}
+                                        {{ einheit }}
+                                    {% elif not menge %}
+                                         (benötigt)
+                                    {% endif %}
+                                {% endif %} {# Ende if menge or not einheit #}
+                            </span>
+                         {% endfor %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% elif request.method == 'POST' %}
+       {# ... (Meldung: Keine Zutaten gefunden - wie zuvor) ... #}
+       <div class="alert alert-warning" role="alert">
+            Keine Zutaten für die ausgewählten Rezepte gefunden oder es wurden keine Rezepte ausgewählt.
+        </div>
+    {% else %}
+         {# ... (Meldung: Bitte Rezepte auswählen - wie zuvor) ... #}
+         <div class="alert alert-info" role="alert">
+            Wähle Rezepte auf der <a href="{{ url_for('index') }}" class="alert-link">Startseite</a> aus, um eine Einkaufsliste zu erstellen.
+        </div>
+    {% endif %}
+
+    <hr class="my-4">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück zur Rezeptübersicht</a>
+
+{% endblock %}

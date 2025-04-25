@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ rezept.name }}{% endblock %}
+
+{% block content %}
+    <div class="card mb-4">
+        {# NEU: Bild über dem Header oder im Body #}
+        {% if rezept.image_file %}
+            <img src="{{ url_for('static', filename='uploads/' + rezept.image_file) }}" class="card-img-top" alt="{{ rezept.name }}" style="max-height: 400px; object-fit: cover;">
+        {% endif %}
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">{{ rezept.name }}</h1>
+            <div>
+                {# NEU: Kategorie als Badge anzeigen #}
+             {% if rezept.category %}
+             <span class="badge bg-info me-2">{{ rezept.category.name }}</span>
+             {% endif %}
+                 <a href="{{ url_for('edit_recipe', rezept_id=rezept.id) }}" class="btn btn-secondary btn-sm">Bearbeiten</a>
+                 <form action="{{ url_for('delete_recipe', rezept_id=rezept.id) }}" method="POST" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');" style="display: inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">Rezept löschen</button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if rezept.beschreibung %}
+                <p class="card-text">{{ rezept.beschreibung }}</p>
+                <hr>
+            {% endif %}
+
+            <div class="text-muted mb-3">
+                {% if rezept.kochzeit_minuten %}
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock me-1" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg> Kochzeit: {{ rezept.kochzeit_minuten }} Min | </span>
+                {% endif %}
+                {% if rezept.portionen %}
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people me-1" viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 10.5C1.413 10.5 0 11.587 0 13s1.413 2.5 4 2.5c.46 0 .908-.062 1.32-.175A5.99 5.99 0 0 1 4.92 10zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg> Portionen: {{ rezept.portionen }} | </span>
+                {% endif %}
+                 {% if rezept.quelle %}
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link-45deg me-1" viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/></svg> Quelle: {{ rezept.quelle }}</span>
+                {% endif %}
+            </div>
+
+            <h2>Zutaten</h2>
+             <ul class="list-group list-group-flush mb-3">
+                {% for assoc in rezept.zutaten_association %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                             {% if assoc.menge %}{{ assoc.menge if assoc.menge % 1 != 0 else assoc.menge|int }} {% endif %}
+                             {% if assoc.einheit %} {{ assoc.einheit }}{% endif %}
+                             <strong>{{ assoc.zutat.name }}</strong>
+                        </span>
+                        <form action="{{ url_for('delete_ingredient', rezept_id=rezept.id, zutat_id=assoc.zutat.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Diese Zutat wirklich aus dem Rezept entfernen?');">
+                             <button type="submit" class="btn btn-outline-danger btn-sm" title="Zutat entfernen">&times;</button> {# Kleiner roter Button #}
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="list-group-item">(Noch keine Zutaten hinzugefügt)</li>
+                {% endfor %}
+            </ul>
+
+            <div class="add-ingredient-form mt-4 pt-3 border-top">
+                <h5>Zutat hinzufügen</h5>
+                <form method="POST" action="{{ url_for('add_ingredient', rezept_id=rezept.id) }}" class="row gx-2 gy-2 align-items-center">
+                    {{ ingredient_form.hidden_tag() }} {# CSRF Token #}
+                    <div class="col-sm-4">
+                        <label class="visually-hidden" for="zutat_name">{{ ingredient_form.zutat_name.label.text }}</label>
+                        {{ ingredient_form.zutat_name(class="form-control form-control-sm", placeholder=ingredient_form.zutat_name.label.text) }}
+                    </div>
+                     <div class="col-sm-2">
+                        <label class="visually-hidden" for="menge">{{ ingredient_form.menge.label.text }}</label>
+                        {{ ingredient_form.menge(class="form-control form-control-sm", placeholder=ingredient_form.menge.label.text) }}
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="visually-hidden" for="einheit">{{ ingredient_form.einheit.label.text }}</label>
+                        {{ ingredient_form.einheit(class="form-control form-control-sm", placeholder=ingredient_form.einheit.label.text) }}
+                    </div>
+                     <div class="col-auto">
+                        {{ ingredient_form.submit(class="btn btn-primary btn-sm") }}
+                     </div>
+                </form>
+            </div>
+
+            <h2 class="mt-4">Anleitung</h2>
+            <p class="card-text" style="white-space: pre-wrap;">{{ rezept.anleitung }}</p>
+            
+            {# Alternative Position für Kategorie: #}
+         {# {% if rezept.category %} <p><strong>Kategorie:</strong> {{ rezept.category.name }}</p> {% endif %} #}
+        </div> <div class="card-footer text-muted">
+             <a href="{{ url_for('index') }}">Zurück zur Übersicht</a>
+        </div>
+    </div> {% endblock %}
