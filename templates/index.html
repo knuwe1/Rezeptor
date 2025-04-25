@@ -4,55 +4,60 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-3">
-         <h1>Alle Rezepte</h1>
-         <a href="{{ url_for('add_recipe') }}" class="btn btn-success">Neues Rezept hinzufügen</a>
+        <h1>Alle Rezepte</h1>
+        <a href="{{ url_for('add_recipe') }}" class="btn btn-success">Neues Rezept hinzufügen</a>
     </div>
 
-
     <form action="{{ url_for('shopping_list') }}" method="POST">
-
         {% if rezepte %}
             <p>Wähle Rezepte aus, um eine Einkaufsliste zu erstellen:</p>
             <ul class="list-group mb-3">
                 {% for rezept in rezepte %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center"> {# Container für Bild+Checkbox+Label #}
-                        {# NEU: Thumbnail #}
-                        {% if rezept.image_file %}
-                            <img src="{{ url_for('static', filename='uploads/' + rezept.image_file) }}" alt="{{ rezept.name }}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 15px;" class="rounded">
-                        {% else %}
-                            <div style="width: 50px; height: 50px; background-color: #eee; margin-right: 15px;" class="rounded d-flex align-items-center justify-content-center text-muted">?</div> {# Platzhalter #}
-                        {% endif %}
-                         <input type="checkbox" name="recipe_ids" value="{{ rezept.id }}" id="rezept_{{ rezept.id }}" class="form-check-input me-2">
-                        <label for="rezept_{{ rezept.id }}">
-                            {{ rezept.name }}
-                            {# NEU: Kategorie als kleiner Text #}
-                            {% if rezept.category %}
-                            <small class="text-muted ms-2">({{ rezept.category.name }})</small>
+                        <div class="d-flex align-items-center flex-grow-1 me-3"> {# Container für Bild+Checkbox+Label #}
+                            {# Thumbnail oder Platzhalter #}
+                            {% if rezept.image_file %}
+                                <img src="{{ url_for('static', filename='uploads/' + rezept.image_file) }}" alt="{{ rezept.name }}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 15px;" class="rounded">
+                            {% else %}
+                                <div style="width: 50px; height: 50px; background-color: #eee; margin-right: 15px;" class="rounded d-flex align-items-center justify-content-center text-muted flex-shrink-0">?</div>
                             {% endif %}
-                        </label>
-                    </div>
-                        <a href="{{ url_for('recipe_detail', rezept_id=rezept.id) }}" class="btn btn-outline-secondary btn-sm">Details</a>
+
+                            {# Checkbox und Label #}
+                            <div class="form-check">
+                                <input type="checkbox" name="recipe_ids" value="{{ rezept.id }}" id="rezept_{{ rezept.id }}" class="form-check-input">
+                                <label for="rezept_{{ rezept.id }}" class="form-check-label">
+                                    {{ rezept.name }}
+                                    {% if rezept.category %}
+                                        <small class="text-muted ms-2">({{ rezept.category.name }})</small>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        {# Detail-Button #}
+                        <a href="{{ url_for('recipe_detail', rezept_id=rezept.id) }}" class="btn btn-outline-secondary btn-sm flex-shrink-0">Details</a>
                     </li>
                 {% else %}
                     <li class="list-group-item">Noch keine Rezepte vorhanden.</li>
                 {% endfor %}
-            </ul>{# NEU: Eingabefeld für Portionen #}
+            </ul>
+
+            {# Portionen-Eingabe und Submit-Button #}
             <div class="row g-3 align-items-center mb-3">
-                 <div class="col-auto">
+                <div class="col-auto">
                     <label for="desired_portions" class="col-form-label">Einkaufsliste für:</label>
-                 </div>
-                 <div class="col-auto">
-                     <input type="number" id="desired_portions" name="desired_portions" class="form-control" min="1" value="2" required style="width: 80px;">
-                 </div>
-                 <div class="col-auto">
-                     <label for="desired_portions" class="col-form-label">Portion(en)</label>
-                 </div>
-                 <div class="col-auto">
+                </div>
+                <div class="col-auto">
+                    <input type="number" id="desired_portions" name="desired_portions" class="form-control" min="1" value="2" required style="width: 80px;">
+                </div>
+                <div class="col-auto">
+                    <label for="desired_portions" class="col-form-label">Portion(en)</label>
+                </div>
+                <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Einkaufsliste erstellen</button>
-                 </div>
+                </div>
             </div>
         {% else %}
-             <p>Füge zuerst Rezepte hinzu.</p>
+            <p>Füge zuerst Rezepte hinzu.</p>
         {% endif %}
-    </form> {% endblock %}
+    </form>
+{% endblock %}

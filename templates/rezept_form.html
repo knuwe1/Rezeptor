@@ -5,73 +5,51 @@
 {% block content %}
     <h1>{{ title }}</h1>
 
-    <form method="POST" action="" novalidate enctype="multipart/form-data"> {# novalidate, damit Browser-Validierung nicht mit WTForms kollidiert #}
+    {# Helper macro für Formularfelder (optional, aber reduziert Wiederholung) #}
+    {% macro render_field(field, extra_classes="") %}
+        <div class="mb-3">
+            {{ field.label(class="form-label") }}<br>
+            {{ field(class="form-control " + extra_classes + (" is-invalid" if field.errors else ""), **kwargs) }}
+            {% if field.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in field.errors %}<span>{{ error }}</span>{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endmacro %}
+
+    <form method="POST" action="" novalidate enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
-        <div class="mb-3">
-            {{ form.name.label(class="form-label") }}<br>
-            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), size=50) }}
-            {% if form.name.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.name.errors %}<span>{{ error }}</span>{% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="mb-3">
-            {{ form.beschreibung.label(class="form-label") }}<br>
-            {{ form.beschreibung(class="form-control" + (" is-invalid" if form.beschreibung.errors else ""), rows=4) }}
-            {% if form.beschreibung.errors %}
-                 <div class="invalid-feedback d-block">
-                    {% for error in form.beschreibung.errors %}<span>{{ error }}</span>{% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="mb-3">
-            {{ form.anleitung.label(class="form-label") }}<br>
-            {{ form.anleitung(class="form-control" + (" is-invalid" if form.anleitung.errors else ""), rows=10) }}
-            {% if form.anleitung.errors %}
-                 <div class="invalid-feedback d-block">
-                    {% for error in form.anleitung.errors %}<span>{{ error }}</span>{% endfor %}
-                </div>
-            {% endif %}
-        </div>
+        {{ render_field(form.name, size=50) }}
+        {{ render_field(form.beschreibung, rows=4) }}
+        {{ render_field(form.anleitung, rows=10) }}
 
         {# Gruppiere Kochzeit und Portionen nebeneinander mit Grid #}
         <div class="row mb-3">
             <div class="col-md-6">
                 {{ form.kochzeit_minuten.label(class="form-label") }}<br>
                 {{ form.kochzeit_minuten(class="form-control" + (" is-invalid" if form.kochzeit_minuten.errors else "")) }}
-                 {% if form.kochzeit_minuten.errors %}
+                {% if form.kochzeit_minuten.errors %}
                     <div class="invalid-feedback d-block">
                         {% for error in form.kochzeit_minuten.errors %}<span>{{ error }}</span>{% endfor %}
                     </div>
                 {% endif %}
             </div>
-             <div class="col-md-6">
+            <div class="col-md-6">
                 {{ form.portionen.label(class="form-label") }}<br>
                 {{ form.portionen(class="form-control" + (" is-invalid" if form.portionen.errors else "")) }}
-                 {% if form.portionen.errors %}
-                     <div class="invalid-feedback d-block">
+                {% if form.portionen.errors %}
+                    <div class="invalid-feedback d-block">
                         {% for error in form.portionen.errors %}<span>{{ error }}</span>{% endfor %}
                     </div>
-                 {% endif %}
+                {% endif %}
             </div>
         </div>
 
+        {{ render_field(form.quelle, size=50) }}
 
-         <div class="mb-3">
-            {{ form.quelle.label(class="form-label") }}<br>
-            {{ form.quelle(class="form-control" + (" is-invalid" if form.quelle.errors else ""), size=50) }}
-             {% if form.quelle.errors %}
-                 <div class="invalid-feedback d-block">
-                    {% for error in form.quelle.errors %}<span>{{ error }}</span>{% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        {# NEU: Kategorie-Auswahlfeld #}
+        {# Kategorie-Auswahlfeld #}
         <div class="mb-3">
             {{ form.category.label(class="form-label") }}<br>
             {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }} {# form-select für Dropdowns #}
@@ -82,18 +60,18 @@
             {% endif %}
         </div>
 
-        {# NEU: Bild-Upload-Feld #}
-         <div class="mb-3">
+        {# Bild-Upload-Feld #}
+        <div class="mb-3">
             {{ form.image.label(class="form-label") }}<br>
             {# Aktuelles Bild anzeigen (nur im Bearbeiten-Modus) #}
             {% if current_image %}
                 <div class="mb-2">
-                    <img src="{{ current_image }}" alt="Aktuelles Bild" style="max-height: 150px; width: auto;">
+                    <img src="{{ current_image }}" alt="Aktuelles Bild" style="max-height: 150px; width: auto;" class="img-thumbnail"> {# img-thumbnail #}
                 </div>
-                <small class="text-muted">Aktuelles Bild. Lade ein neues hoch, um es zu ersetzen.</small>
+                <small class="text-muted d-block mb-1">Aktuelles Bild. Lade ein neues hoch, um es zu ersetzen.</small> {# d-block für eigene Zeile #}
             {% endif %}
             {{ form.image(class="form-control" + (" is-invalid" if form.image.errors else "")) }}
-             {% if form.image.errors %}
+            {% if form.image.errors %}
                 <div class="invalid-feedback d-block">
                     {% for error in form.image.errors %}<span>{{ error }}</span>{% endfor %}
                 </div>
@@ -101,13 +79,13 @@
         </div>
 
         <div class="mt-4">
-             {{ form.submit(class="btn btn-primary") }}
-             {# Abbrechen-Link nur anzeigen, wenn wir bearbeiten (rezept-Objekt existiert) #}
-             {% if rezept %}
+            {{ form.submit(class="btn btn-primary") }}
+            {# Abbrechen-Link / Zurück-Link #}
+            {% if rezept %}
                 <a href="{{ url_for('recipe_detail', rezept_id=rezept.id) }}" class="btn btn-secondary ms-2">Abbrechen</a>
-             {% else %}
-                 <a href="{{ url_for('index') }}" class="btn btn-link ms-2">Zurück zur Übersicht</a>
-             {% endif %}
+            {% else %}
+                <a href="{{ url_for('index') }}" class="btn btn-link ms-2">Zurück zur Übersicht</a>
+            {% endif %}
         </div>
     </form>
 
