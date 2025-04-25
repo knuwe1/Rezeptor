@@ -78,7 +78,8 @@ class RecipeForm(FlaskForm):
         ]
     )
     # Choices are set dynamically in the route
-    category = SelectField('Kategorie', coerce=int, validators=[Optional()])
+    # coerce=int entfernt! Die Verarbeitung erfolgt in der Route.
+    category = SelectField('Kategorie', validators=[Optional()])
     submit = SubmitField('Rezept Speichern')
 
 class IngredientForm(FlaskForm):
